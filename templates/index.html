@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-mails Importants</title>
+  <style>
+    :root {
+      --fond-clair: #f4f4f4;
+      --fond-bloc: #ffffff;
+      --texte: #222;
+      --bleu: #007BFF;
+      --rouge: #d9534f;
+      --gris: #777;
+      --ombre: rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: var(--fond-clair);
+      color: var(--texte);
+    }
+
+    h1 {
+      color: var(--bleu);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: var(--fond-bloc);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px var(--ombre);
+    }
+
+    .search-box, .login-box {
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], select, button {
+      padding: 8px 12px;
+      margin-right: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: var(--bleu);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .email {
+      border-bottom: 1px solid #ddd;
+      padding: 15px 0;
+    }
+
+    .sujet a {
+      font-weight: bold;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .sujet a:hover {
+      text-decoration: underline;
+    }
+
+    .expediteur, .date {
+      color: var(--gris);
+    }
+
+    .contenu {
+      margin-top: 5px;
+    }
+
+    .pagination {
+      margin-top: 30px;
+      font-weight: bold;
+    }
+
+    .pagination a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: var(--bleu);
+    }
+
+    .pagination a:hover {
+      text-decoration: underline;
+    }
+
+    ul { padding-left: 0; list-style: none; }
+    li { margin-bottom: 10px; }
+
+    #message-confirmation {
+      color: green;
+      margin-top: 15px;
+    }
+
+    @media screen and (max-width: 600px) {
+      input, select, button {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📩 E-mails Importants</h1>
+
+    <div class="login-box">
+      <a href="/login"><button>🔐 Se connecter avec Gmail</button></a>
+      <form method="POST" action="/surveiller" style="display:inline-block;">
+        <button type="submit">👁️ Lancer la surveillance</button>
+      </form>
+      <form method="POST" action="/arreter_surveillance" style="display:inline-block;">
+        <button type="submit" style="background-color: #ffdddd; color: #222;">🛑 Arrêter</button>
+      </form>
+      <form method="POST" action="/analyser" style="display:inline-block;" onsubmit="return showConfirmation();">
+        <button type="submit">📥 Importer (automatique)</button>
+      </form>
+      <a href="/choisir_emails" style="text-decoration: none; display:inline-block;">
+        <button type="button" style="background-color: #28a745; color: white;">✅ Importer avec sélection manuelle</button>
+      </a>
+      <form method="POST" action="/sauvegarde" style="display:inline-block;">
+        <button type="submit">💾 Sauvegarde manuelle</button>
+      </form>
+      <div id="message-confirmation"></div>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li style="color: green;">✅ {{ message }}</li>
+            <script>
+              if ("{{ message }}".includes("e-mails analysés") || "{{ message }}".includes("nouveaux e-mails")) {
+                document.getElementById("message-confirmation").innerText = "✅ Analyse terminée : {{ message }}";
+              }
+            </script>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <div class="search-box">
+      <form method="GET" action="{{ url_for('index') }}">
+        <input type="text" name="search" placeholder="Rechercher..." value="{{ search_query }}">
+        <select name="filter">
+          <option value="">-- Type --</option>
+          <option value="virement" {% if filter_type == 'virement' %}selected{% endif %}>Virements</option>
+          <option value="facture" {% if filter_type == 'facture' %}selected{% endif %}>Factures</option>
+          <option value="note" {% if filter_type == 'note' %}selected{% endif %}>Notes</option>
+          <option value="paiement" {% if filter_type == 'paiement' %}selected{% endif %}>Paiement</option>
+          <option value="résultat" {% if filter_type == 'résultat' %}selected{% endif %}>Résultat</option>
+        </select>
+        <input type="text" name="exp" placeholder="Expéditeur" value="{{ exp_filter }}">
+        <select name="date">
+          <option value="">-- Date --</option>
+          <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Aujourd'hui</option>
+          <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Cette semaine</option>
+          <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Ce mois</option>
+        </select>
+        <button type="submit">🔍 Rechercher</button>
+        <a href="{{ url_for('index') }}">🔄 Réinitialiser</a>
+      </form>
+
+      <form method="GET" action="/export_csv" style="margin-top:10px;">
+        <button type="submit">📤 Export CSV</button>
+      </form>
+    </div>
+
+    {% if emails %}
+      {% for email in emails %}
+        <div class="email">
+          <p class="sujet">
+            <a href="{{ url_for('view_email', email_id=email[0], page=page) }}">📬 {{ email[1] }}</a>
+          </p>
+          <p class="expediteur">📨 {{ email[2] }}</p>
+          <p class="date">📅 {{ email[3] }}</p>
+          <p class="contenu">📜 {{ email[4][:200] }}...</p>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>📭 Aucun e-mail enregistré.</p>
+    {% endif %}
+
+    <div class="pagination">
+      {% if total_pages > 1 %}
+        {% if page > 1 %}
+          <a href="{{ url_for('index', page=page-1, search=search_query, filter=filter_type, exp=exp_filter, date=date_filter) }}">← Précédent</a>
+        {% endif %}
+        Page {{ page }} sur {{ total_pages }}
+        {% if page < total_pages %}
+          <a href="{{ url_for('index', page=page+1, search=search_query, filter=filter_type, exp=exp_filter, date=date_filter) }}">Suivant →</a>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    function showConfirmation() {
+      document.getElementById('message-confirmation').innerText = '✅ Analyse en cours...';
+      return true;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
+
+      {% if messages %}
+        {% for message in messages %}
+          if ("{{ message }}".includes("Nouvel e-mail important")) {
+            const audio = new Audio("/static/alert.mp3");
+            audio.play();
+            new Notification("📬 Agent IA Email", {
+              body: "{{ message }}",
+              icon: "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/logo_gmail_lockup_default_1x_r2.png"
+            });
+          }
+        {% endfor %}
+      {% endif %}
+    });
+  </script>
+</body>
+</html>

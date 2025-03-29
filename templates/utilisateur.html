@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion des utilisateurs</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background-color: #f4f4f4;
+      color: #222;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #007BFF;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    form {
+      display: inline;
+    }
+
+    button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #c82333;
+    }
+
+    .retour {
+      margin-top: 20px;
+    }
+
+    .retour a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+
+    .retour a:hover {
+      text-decoration: underline;
+    }
+
+    .message {
+      margin-bottom: 15px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>👤 Utilisateurs enregistrés</h2>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="message">
+          {% for message in messages %}
+            ✅ {{ message }}<br>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if utilisateurs %}
+      <ul>
+        {% for utilisateur in utilisateurs %}
+          <li>
+            {{ utilisateur }}
+            <form action="{{ url_for('supprimer_utilisateur') }}" method="POST">
+              <input type="hidden" name="email" value="{{ utilisateur }}">
+              <button type="submit">❌ Supprimer</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>📭 Aucun utilisateur enregistré.</p>
+    {% endif %}
+
+    <div class="retour">
+      <a href="{{ url_for('index') }}">← Retour à la liste des e-mails</a>
+    </div>
+  </div>
+</body>
+</html>

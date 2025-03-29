@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+emails.db
+tokens/
+credentials.json
+.env
+

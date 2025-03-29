@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boîte Mail IA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #007BFF;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .actions {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bienvenue dans votre boîte mail intelligente</h1>
+
+        <div class="actions">
+            <form action="/login" method="get" style="display:inline;">
+                <button class="btn" type="submit">Se connecter avec Gmail</button>
+            </form>
+
+            <form action="/analyser" method="post" style="display:inline;">
+                <button class="btn" type="submit">Analyser automatiquement</button>
+            </form>
+
+            <form action="/choisir_emails" method="get" style="display:inline;">
+                <button class="btn" type="submit">Importer manuellement</button>
+            </form>
+        </div>
+
+        {% if emails %}
+            <ul>
+                {% for email in emails %}
+                    <li>
+                        <strong>{{ email[1] }}</strong><br>
+                        De : {{ email[2] }}<br>
+                        Date : {{ email[3] }}<br>
+                        {{ email[4][:100] }}...
+                        <form action="/delete/{{ email[0] }}" method="post" style="display:inline;">
+                            <button type="submit">Supprimer</button>
+                        </form>
+                        <a href="/email/{{ email[0] }}?page={{ page }}">Voir</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Aucun e-mail trouvé.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
