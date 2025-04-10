@@ -2,7 +2,6 @@ import base64
 import sqlite3
 import os
 import pickle
-import pyttsx3
 from flask import flash
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -12,11 +11,9 @@ from google.auth.transport.requests import Request
 DATABASE_NAME = "emails.db"
 MOTS_CLES_IMPORTANTS = ["virement", "facture", "paiement", "reçu", "banque", "note", "résultat", "évaluation"]
 
-moteur_voix = pyttsx3.init()
-
+# Désactiver l'alerte vocale sur Render (pas de support audio)
 def lire_alerte_avec_voix(texte):
-    moteur_voix.say(texte)
-    moteur_voix.runAndWait()
+    print(f"ALERTE : {texte}")
 
 def get_gmail_service(user_email=None, port=None):
     if user_email:
@@ -45,6 +42,17 @@ def ajouter_email(sujet, expediteur, date, contenu):
     conn.commit()
     conn.close()
     print(f"✅ E-mail ajouté : {sujet}")
+
+def email_existe_deja(sujet, expediteur, date, contenu):
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT COUNT(*) FROM emails
+        WHERE sujet = ? AND expediteur = ? AND date = ? AND contenu = ?
+    """, (sujet, expediteur, date, contenu))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0
 
 def est_email_important(sujet, contenu):
     sujet = sujet.lower()
@@ -77,7 +85,7 @@ def _analyser_et_enregistrer(service):
         results = service.users().messages().list(userId='me', maxResults=10).execute()
         messages = results.get('messages', [])
         if not messages:
-            print("📭 Aucun e-mail trouvé.")
+            print("📬 Aucun e-mail trouvé.")
             return
 
         for message in messages:
@@ -90,8 +98,11 @@ def _analyser_et_enregistrer(service):
             contenu = get_email_content(msg)
 
             if est_email_important(sujet, contenu):
-                ajouter_email(sujet, expediteur, date, contenu)
-                lire_alerte_avec_voix(f"Email important : {sujet}")
-                flash("🔔 Nouvel e-mail important détecté")
+                if not email_existe_deja(sujet, expediteur, date, contenu):
+                    ajouter_email(sujet, expediteur, date, contenu)
+                    lire_alerte_avec_voix(f"Email important : {sujet}")
+                    flash("🔔 Nouvel e-mail important détecté")
+                else:
+                    print(f"🔁 E-mail déjà existant ignoré : {sujet}")
     except Exception as e:
         print(f"❌ Erreur analyse e-mails : {e}")
