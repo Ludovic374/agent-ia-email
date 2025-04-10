@@ -1,6 +1,9 @@
 import os
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
+from db_handler import creer_base
+creer_base()
+
 import os
 import sqlite3
 import csv
