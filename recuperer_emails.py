@@ -80,6 +80,19 @@ def analyser_et_enregistrer_emails(user_email):
     service = get_gmail_service(user_email=user_email)
     _analyser_et_enregistrer(service)
 
+def lister_tokens_utilisateurs():
+    return [f for f in os.listdir('tokens') if f.startswith('token_') and f.endswith('.pickle')]
+
+def list_emails_for_user(token_filename):
+    token_path = os.path.join("tokens", token_filename)
+    if not os.path.exists(token_path):
+        print(f"❌ Token introuvable : {token_path}")
+        return
+
+    user_email = token_filename.replace("token_", "").replace(".pickle", "")
+    service = get_gmail_service(user_email=user_email)
+    _analyser_et_enregistrer(service)
+
 def _analyser_et_enregistrer(service):
     try:
         results = service.users().messages().list(userId='me', maxResults=10).execute()

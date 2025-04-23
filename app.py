@@ -5,10 +5,14 @@ from db_handler import creer_base
 creer_base()
 
 import os
+import signal
+import psutil
+import os
 import sqlite3
 import csv
 import io
 import pickle
+from surveillance_multi_utilisateur import lancer_surveillance
 from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
 import subprocess
 import signal
@@ -82,31 +86,29 @@ def sauvegarde():
     return redirect(url_for("index"))
 
 
-
 @app.route("/surveiller", methods=["POST"])
 def surveiller():
     try:
-        subprocess.Popen(["python3", "agent_surveillance.py"])
-        flash("Agent IA lancé en arrière-plan.")
+        process = subprocess.Popen(["python3", "surveillance_multi_utilisateur.py"])
+        with open("pid.txt", "w") as f:
+            f.write(str(process.pid))
+        flash("✅ Surveillance multi-utilisateur démarrée.")
     except Exception as e:
-        flash(f"Erreur lors du lancement de l'agent : {e}")
+        flash(f"❌ Erreur lancement surveillance : {e}")
     return redirect(url_for("index"))
 
 @app.route("/arreter_surveillance", methods=["POST"])
+@app.route('/arreter_surveillance', methods=['POST'])
 def arreter_surveillance():
     try:
-        result = subprocess.run(["ps", "aux"], stdout=subprocess.PIPE, text=True)
-        lines = result.stdout.splitlines()
-        count = 0
-        for line in lines:
-            if "agent_surveillance.py" in line and "python3" in line:
-                pid = int(line.split()[1])
-                os.kill(pid, signal.SIGKILL)
-                count += 1
-        if count:
-            flash(f"{count} processus de surveillance arrêtés.")
+        if os.path.exists("pid.txt"):
+            with open("pid.txt", "r") as f:
+                pid = int(f.read())
+            psutil.Process(pid).terminate()
+            os.remove("pid.txt")
+            flash("Processus de surveillance arrêté avec succès.")
         else:
-            flash("Aucun processus agent_surveillance.py actif trouvé.")
+            flash("Aucun fichier de PID trouvé. La surveillance ne semble pas active.")
     except Exception as e:
         flash(f"Erreur lors de l'arrêt : {e}")
     return redirect(url_for("index"))
