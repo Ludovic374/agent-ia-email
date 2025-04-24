@@ -168,6 +168,10 @@ def oauth2callback():
 @app.route("/", methods=["GET"])
 @app.route("/page/<int:page>", methods=["GET"])
 def index(page=1):
+    if "user_email" not in session:
+        flash("Veuillez vous connecter.")
+        return redirect(url_for("login"))
+
     search_query = request.args.get("search", "")
     filter_type = request.args.get("filter", "")
     exp_filter = request.args.get("exp", "")
@@ -180,6 +184,10 @@ def index(page=1):
 
     where_clauses = []
     params = []
+
+    # Filtrer uniquement les e-mails de l'utilisateur connecté
+    where_clauses.append("utilisateur = ?")
+    params.append(session["user_email"])
 
     if search_query:
         where_clauses.append("(sujet LIKE ? OR contenu LIKE ?)")

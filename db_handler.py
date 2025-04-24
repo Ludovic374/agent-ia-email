@@ -13,19 +13,20 @@ def creer_base():
             sujet TEXT,
             expediteur TEXT,
             date TEXT,
-            contenu TEXT
+            contenu TEXT,
+            utilisateur TEXT
         )
     ''')
     conn.commit()
     conn.close()
     print("✅ Base emails.db créée avec succès !")
 
-def ajouter_email(sujet, expediteur, date, contenu):
+def ajouter_email(sujet, expediteur, date, contenu, utilisateur):
     """Ajoute un e-mail à la base de données."""
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO emails (sujet, expediteur, date, contenu) VALUES (?, ?, ?, ?)",
-                   (sujet, expediteur, date, contenu))
+    cursor.execute("INSERT INTO emails (sujet, expediteur, date, contenu, utilisateur) VALUES (?, ?, ?, ?, ?)",
+                   (sujet, expediteur, date, contenu, utilisateur))
     conn.commit()
     conn.close()
     print("✅ E-mail ajouté à la base de données")

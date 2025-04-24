@@ -32,16 +32,15 @@ def get_gmail_service(user_email=None, port=None):
         creds = flow.run_local_server(port=port or 5520)
     return build('gmail', 'v1', credentials=creds)
 
-def ajouter_email(sujet, expediteur, date, contenu):
+def ajouter_email(sujet, expediteur, date, contenu, utilisateur):
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO emails (sujet, expediteur, date, contenu)
-        VALUES (?, ?, ?, ?)
-    """, (sujet, expediteur, date, contenu))
+        INSERT INTO emails (sujet, expediteur, date, contenu, utilisateur)
+        VALUES (?, ?, ?, ?, ?)
+    """, (sujet, expediteur, date, contenu, utilisateur))
     conn.commit()
     conn.close()
-    print(f"✅ E-mail ajouté : {sujet}")
 
 def email_existe_deja(sujet, expediteur, date, contenu):
     conn = sqlite3.connect(DATABASE_NAME)
@@ -74,11 +73,12 @@ def get_email_content(msg):
 
 def analyser_et_enregistrer_emails_manuel():
     service = get_gmail_service(port=5520)
-    _analyser_et_enregistrer(service)
+    user_email = "manuel"  # valeur de fallback si besoin
+    _analyser_et_enregistrer(service, user_email)
 
 def analyser_et_enregistrer_emails(user_email):
     service = get_gmail_service(user_email=user_email)
-    _analyser_et_enregistrer(service)
+    _analyser_et_enregistrer(service, user_email)
 
 def lister_tokens_utilisateurs():
     return [f for f in os.listdir('tokens') if f.startswith('token_') and f.endswith('.pickle')]
@@ -91,9 +91,9 @@ def list_emails_for_user(token_filename):
 
     user_email = token_filename.replace("token_", "").replace(".pickle", "")
     service = get_gmail_service(user_email=user_email)
-    _analyser_et_enregistrer(service)
+    _analyser_et_enregistrer(service, user_email)
 
-def _analyser_et_enregistrer(service):
+def _analyser_et_enregistrer(service, user_email):
     try:
         results = service.users().messages().list(userId='me', maxResults=10).execute()
         messages = results.get('messages', [])
@@ -112,9 +112,8 @@ def _analyser_et_enregistrer(service):
 
             if est_email_important(sujet, contenu):
                 if not email_existe_deja(sujet, expediteur, date, contenu):
-                    ajouter_email(sujet, expediteur, date, contenu)
+                    ajouter_email(sujet, expediteur, date, contenu, user_email)
                     lire_alerte_avec_voix(f"Email important : {sujet}")
-                    #flash("🔔 Nouvel e-mail important détecté")
                 else:
                     print(f"🔁 E-mail déjà existant ignoré : {sujet}")
     except Exception as e:
