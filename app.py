@@ -47,7 +47,12 @@ def mistral():
         question = request.form.get("question", "")
         conn = sqlite3.connect(DATABASE_NAME)
         cursor = conn.cursor()
-        cursor.execute("SELECT sujet, expediteur, date, contenu FROM emails ORDER BY id DESC LIMIT 10")
+        cursor.execute("""
+    SELECT sujet, expediteur, date, contenu 
+    FROM emails 
+    WHERE utilisateur = ? 
+    ORDER BY id DESC LIMIT 10
+""", (session.get("user_email"),))
         emails = cursor.fetchall()
         conn.close()
 
