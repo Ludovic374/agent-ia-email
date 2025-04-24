@@ -6,3 +6,4 @@ pyttsx3
 gunicorn
 schedule
 psutil
+python-dotenv

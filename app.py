@@ -1,9 +1,13 @@
+from dotenv import load_dotenv
+load_dotenv()
 import os
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 from db_handler import creer_base
 creer_base()
 
+
+from mistral_api import interroger_mistral
 import os
 import signal
 import psutil
@@ -35,6 +39,30 @@ TOKEN_FOLDER = "tokens"
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 os.makedirs(TOKEN_FOLDER, exist_ok=True)
+
+@app.route("/mistral", methods=["GET", "POST"])
+def mistral():
+    reponse = ""
+    if request.method == "POST":
+        question = request.form.get("question", "")
+        conn = sqlite3.connect(DATABASE_NAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT sujet, expediteur, date, contenu FROM emails ORDER BY id DESC LIMIT 10")
+        emails = cursor.fetchall()
+        conn.close()
+
+        # Fusionner le contenu pour donner du contexte
+        contexte = ""
+        for email in emails:
+            sujet, expediteur, date, contenu = email
+            contexte += f"Sujet: {sujet}\nExpéditeur: {expediteur}\nDate: {date}\nContenu: {contenu[:300]}\n\n"
+
+        try:
+            reponse = interroger_mistral(question, contexte)
+        except Exception as e:
+            reponse = f"Erreur avec l'API Mistral : {e}"
+
+    return render_template("mistral.html", reponse=reponse)
 
 @app.route("/login")
 def login():

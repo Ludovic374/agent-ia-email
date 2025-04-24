@@ -114,7 +114,7 @@ def _analyser_et_enregistrer(service):
                 if not email_existe_deja(sujet, expediteur, date, contenu):
                     ajouter_email(sujet, expediteur, date, contenu)
                     lire_alerte_avec_voix(f"Email important : {sujet}")
-                    flash("🔔 Nouvel e-mail important détecté")
+                    #flash("🔔 Nouvel e-mail important détecté")
                 else:
                     print(f"🔁 E-mail déjà existant ignoré : {sujet}")
     except Exception as e:

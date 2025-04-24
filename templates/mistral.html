@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assistant IA - Mistral</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background-color: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      color: #007BFF;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .response {
+      margin-top: 20px;
+      white-space: pre-wrap;
+      background-color: #f1f1f1;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #007BFF;
+    }
+    .back-button {
+      background-color: #007BFF;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Assistant IA Mistral</h2>
+
+    <a href="/" style="text-decoration: none;">
+      <button type="button" class="back-button">← Retour à l’accueil</button>
+    </a>
+
+    <form method="POST">
+      <label for="question">Pose ta question sur tes e-mails :</label>
+      <input type="text" name="question" placeholder="Ex: Quels e-mails parlent de virement ?" required>
+      <button type="submit">Envoyer</button>
+    </form>
+
+    {% if reponse %}
+    <div class="response">
+      <strong>Réponse :</strong><br>
+      {{ reponse }}
+    </div>
+    {% endif %}
+  </div>
+</body>
+</html>
